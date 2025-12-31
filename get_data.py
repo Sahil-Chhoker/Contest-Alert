@@ -37,7 +37,7 @@ def fetch_contest_data() -> dict[str, PlatformResponse]:
             Contest(
                 name=contest['title'],
                 start_time=_convert_to_ist(contest['startTime']),
-                duration=contest['duration'],
+                duration=contest['duration'] // 60, # Convert seconds to minutes
                 link=f"https://leetcode.com/contest/{contest['title'].lower().replace(' ', '-')}/"
             )
             for contest in lc_contests
@@ -58,7 +58,7 @@ def fetch_contest_data() -> dict[str, PlatformResponse]:
             Contest(
                 name=contest['name'],
                 start_time=_convert_to_ist(contest['startTimeSeconds']),
-                duration=contest['durationSeconds'],
+                duration=contest['durationSeconds'] // 60, # Convert seconds to minutes
                 link=f"https://codeforces.com/contests/{contest['id']}"
             )
             for contest in cf_contests if contest.get('phase') == 'BEFORE'
