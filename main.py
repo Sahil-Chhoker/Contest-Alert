@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from get_data import fetch_contest_data, PlatformResponse
 from email_sender import router as email_router, configure_email_sending_time, scheduler
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Start the email scheduler
@@ -14,12 +15,14 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown()
     print("Email scheduler stopped")
 
+
 app = FastAPI(lifespan=lifespan)
 
 # Include the email router
 app.include_router(email_router, prefix="/email", tags=["Email"])
 
 contest_data: dict[str, PlatformResponse] = fetch_contest_data()
+
 
 @app.get("/")
 def read_root():
@@ -29,9 +32,10 @@ def read_root():
             "/contests": "Get all contests",
             "/contests/{type}": "Get contests by platform (leetcode, codeforces, codechef)",
             "/email/send-test-email": "Send test email manually",
-            "/email/schedule-info": "Get scheduler information"
-        }
+            "/email/schedule-info": "Get scheduler information",
+        },
     }
+
 
 @app.get("/contests")
 def all_contests():
@@ -39,11 +43,13 @@ def all_contests():
     contest_data = fetch_contest_data()
     return contest_data
 
+
 @app.get("/contests/{type}")
 def contests(type: Literal["leetcode", "codeforces", "codechef"]):
     global contest_data
     contest_data = fetch_contest_data()
     return contest_data[type]
+
 
 @app.post("/contests/refresh")
 def refresh_contests():

@@ -13,11 +13,12 @@ from datetime import datetime
 
 load_dotenv()
 
+
 class EmailSender:
     def __init__(self):
         self.email_sender = os.getenv("SENDER_EMAIL")
         self.email_password = os.getenv("EMAIL_PASSWORD")
-        self.smtp_server = 'smtp.gmail.com'
+        self.smtp_server = "smtp.gmail.com"
         self.port = 465
 
         if not self.email_password:
@@ -26,9 +27,9 @@ class EmailSender:
     def send_email(self, receiver: str, subject: str, body: str):
         try:
             em = MIMEMultipart("alternative")
-            em['From'] = self.email_sender
-            em['To'] = receiver
-            em['Subject'] = subject
+            em["From"] = self.email_sender
+            em["To"] = receiver
+            em["Subject"] = subject
             em.attach(MIMEText(body, "html"))
 
             context = ssl.create_default_context()
@@ -40,10 +41,14 @@ class EmailSender:
                 time.sleep(5)
                 self.send_email(receiver, subject, body)
             else:
-                raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to send email: {str(e)}"
+                )
+
 
 router = APIRouter()
 email_sender = EmailSender()
+
 
 def format_duration(minutes):
     hours = minutes // 60
@@ -52,26 +57,28 @@ def format_duration(minutes):
         return f"{hours}h {mins}m" if mins > 0 else f"{hours}h"
     return f"{mins}m"
 
+
 def get_platform_color(platform):
     colors = {
         "leetcode": {"bg": "#FFA116", "text": "#ffffff"},
         "codeforces": {"bg": "#1F8ACB", "text": "#ffffff"},
-        "codechef": {"bg": "#5B4638", "text": "#ffffff"}
+        "codechef": {"bg": "#5B4638", "text": "#ffffff"},
     }
     return colors.get(platform, {"bg": "#4F46E5", "text": "#ffffff"})
+
 
 def parse_time_difference(start_time_str):
     try:
         contest_time = datetime.strptime(start_time_str.strip(), "%d %b %Y %H:%M:%S")
         now = datetime.now()
         diff = contest_time - now
-        
+
         if diff.total_seconds() < 0:
             return "Started"
-        
+
         days = diff.days
         hours = diff.seconds // 3600
-        
+
         if days > 0:
             return f"in {days}d {hours}h"
         elif hours > 0:
@@ -82,24 +89,29 @@ def parse_time_difference(start_time_str):
     except:
         return ""
 
+
 def generate_contest_cards(contest_data):
     cards_html = ""
-    
+
     for platform, data in contest_data.items():
         if not data.success or not data.contests:
             continue
-        
+
         p_color = get_platform_color(platform)
         platform_name = platform.capitalize()
-        
+
         for contest in data.contests:
             time_until = parse_time_difference(contest.start_time)
-            
+
             cards_html += f"""
             <div style="background: #ffffff; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: sans-serif;">
                 
                 <div style="margin-bottom: 16px;">
-                    <div style="display: inline-block; background: {p_color['bg']}; color: {p_color['text']}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                    <div style="display: inline-block; background: {
+                p_color["bg"]
+            }; color: {
+                p_color["text"]
+            }; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
                         {platform_name}
                     </div>
 
@@ -108,7 +120,8 @@ def generate_contest_cards(contest_data):
                             {contest.name}
                         </h3>
 
-                        {f'''
+                        {
+                f'''
                         <span style="
                             background: #EEF2FF;
                             color: #4F46E5;
@@ -120,7 +133,10 @@ def generate_contest_cards(contest_data):
                         ">
                             {time_until}
                         </span>
-                        ''' if time_until else ""}
+                        '''
+                if time_until
+                else ""
+            }
                     </div>
                 </div>
                 
@@ -128,18 +144,24 @@ def generate_contest_cards(contest_data):
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                         <tr>
                             <td style="padding-bottom: 8px; font-size: 14px; color: #6B7280;">
-                                <span style="margin-right: 4px;">📅</span> <b>Start:</b> {contest.start_time}
+                                <span style="margin-right: 4px;">📅</span> <b>Start:</b> {
+                contest.start_time
+            }
                             </td>
                         </tr>
                         <tr>
                             <td style="font-size: 14px; color: #6B7280;">
-                                <span style="margin-right: 4px;">⏱️</span> <b>Duration:</b> {format_duration(contest.duration)}
+                                <span style="margin-right: 4px;">⏱️</span> <b>Duration:</b> {
+                format_duration(contest.duration)
+            }
                             </td>
                         </tr>
                     </table>
                 </div>
                 
-                <a href="{contest.link}" style="display: block; background: #111827; color: #ffffff; text-decoration: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; text-align: center;">
+                <a href="{
+                contest.link
+            }" style="display: block; background: #111827; color: #ffffff; text-decoration: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; text-align: center;">
                     View Contest →
                 </a>
             </div>
@@ -149,21 +171,20 @@ def generate_contest_cards(contest_data):
 
 def send_email_to_me():
     from main import all_contests
+
     contest_data = all_contests()
-    
+
     total_contests = sum(
-        len(data.contests) 
-        for data in contest_data.values() 
-        if data.success
+        len(data.contests) for data in contest_data.values() if data.success
     )
-    
+
     if total_contests == 0:
         print("No contests to send")
         return
-    
+
     contest_cards = generate_contest_cards(contest_data)
     current_date = datetime.now().strftime("%b %d, %Y")
-    
+
     subject = f"🏆 Contest Update: {total_contests} events on {current_date}"
     body = f"""
     <!DOCTYPE html>
@@ -214,18 +235,21 @@ def send_email_to_me():
     else:
         raise ValueError("MY_EMAIL not found in environment variables")
 
+
 scheduler = BackgroundScheduler()
 default_hour = 9
 default_minute = 30
 
+
 def configure_email_sending_time():
-    ist = pytz.timezone('Asia/Kolkata')
+    ist = pytz.timezone("Asia/Kolkata")
     scheduler.add_job(
-        send_email_to_me, 
-        CronTrigger(hour=default_hour, minute=default_minute, timezone=ist)
+        send_email_to_me,
+        CronTrigger(hour=default_hour, minute=default_minute, timezone=ist),
     )
     scheduler.start()
     print(f"Email scheduler configured for {default_hour}:{default_minute:02d} IST")
+
 
 @router.get("/send-test-email")
 def send_test_email():
@@ -235,21 +259,22 @@ def send_test_email():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/schedule-info")
 def get_schedule_info():
-    ist = pytz.timezone('Asia/Kolkata')
+    ist = pytz.timezone("Asia/Kolkata")
     next_run = None
-    
+
     jobs = scheduler.get_jobs()
     if jobs:
         next_run_utc = jobs[0].next_run_time
         if next_run_utc:
             next_run = next_run_utc.astimezone(ist).strftime("%d %b %Y %H:%M:%S IST")
-    
+
     return {
         "scheduled_time": f"{default_hour:02d}:{default_minute:02d} IST",
         "timezone": "Asia/Kolkata",
         "next_run": next_run,
         "scheduler_running": scheduler.running,
-        "email_recipient": os.getenv("MY_EMAIL", "Not configured")
+        "email_recipient": os.getenv("MY_EMAIL", "Not configured"),
     }
